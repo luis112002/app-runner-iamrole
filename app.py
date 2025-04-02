@@ -1,29 +1,21 @@
 from fastapi import FastAPI
 import boto3
-import os
 
 app = FastAPI()
-
-BUCKET_NAME = "app-runner-entrada-luis"
-ENTRADA = "entrada/mensaje.txt"
-SALIDA = "salida/resultado.txt"
+s3 = boto3.client('s3')
+bucket = "app-runner-entrada-luis"
 
 @app.get("/")
-def procesar_archivo():
-    s3 = boto3.client("s3")
+def read_file():
+    input_key = "entrada/mensaje.txt"
+    output_key = "salida/resultado.txt"
 
-    try:
-        # Leer el archivo de entrada
-        obj = s3.get_object(Bucket=BUCKET_NAME, Key=ENTRADA)
-        contenido = obj["Body"].read().decode("utf-8")
+    # Obtener contenido
+    response = s3.get_object(Bucket=bucket, Key=input_key)
+    content = response['Body'].read().decode('utf-8')
 
-        # Modificar el contenido
-        nuevo_contenido = f"{contenido}\nProcesado correctamente por FastAPI."
+    # Crear salida
+    resultado = content + "\nProcesado correctamente por FastAPI."
+    s3.put_object(Bucket=bucket, Key=output_key, Body=resultado)
 
-        # Subir el nuevo archivo
-        s3.put_object(Bucket=BUCKET_NAME, Key=SALIDA, Body=nuevo_contenido.encode("utf-8"))
-
-        return {"mensaje": "Archivo procesado con éxito", "contenido_original": contenido}
-    except Exception as e:
-        return {"error": str(e)}
-
+    return {"message": "¡Procesado con éxito!"}
