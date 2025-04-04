@@ -49,3 +49,4 @@ def read_file(request: Request):
 
     # Renderizar HTML
     return templates.TemplateResponse("resultado.html", {"request": request, "s3_url": s3_url})
+
